@@ -1,0 +1,12 @@
+[plugin]
+id = "websocket_client_plugin"
+disabled = false
+name = "WebSocket Client"
+version = "1.0.0"
+description = "WebSocket 客户端插件，支持连接服务器并进行消息通信"
+author = "Your Name"
+library = "websocket_client"
+category = "network"
+tags = ["websocket", "client", "communication"]
+min_app_version = "0.1.0"
+require_history = false

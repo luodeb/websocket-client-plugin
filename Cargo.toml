@@ -1,0 +1,22 @@
+[package]
+name = "websocket-client-plugin"
+version = "1.0.0"
+edition = "2021"
+description = "WebSocket 客户端插件"
+authors = ["Your Name"]
+
+[lib]
+name = "websocket_client"
+crate-type = ["cdylib"]
+
+[dependencies]
+toml = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1.45.1", features = ["full"] }
+tokio-tungstenite = "0.24"
+tungstenite = "0.24"
+futures-util = "0.3"
+
+# 引用插件接口库
+plugin-interfaces = { path = "../../../../plugin-interfaces" }
