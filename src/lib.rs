@@ -16,7 +16,10 @@ pub enum ConnectionState {
     Connected,
     Error(String),
 }
-
+type WebSocketSender = futures_util::stream::SplitSink<
+    tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>,
+    Message,
+>;
 /// WebSocket 客户端插件实现
 #[derive(Clone)]
 pub struct WebSocketClientPlugin {
@@ -26,18 +29,7 @@ pub struct WebSocketClientPlugin {
     auto_reconnect: bool,
     runtime: Option<Arc<Runtime>>,
     client_handle: Arc<Mutex<Option<tokio::task::JoinHandle<()>>>>,
-    ws_sender: Arc<
-        Mutex<
-            Option<
-                futures_util::stream::SplitSink<
-                    tokio_tungstenite::WebSocketStream<
-                        tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
-                    >,
-                    Message,
-                >,
-            >,
-        >,
-    >,
+    ws_sender: Arc<Mutex<Option<WebSocketSender>>>,
 }
 
 impl WebSocketClientPlugin {
@@ -85,7 +77,7 @@ impl WebSocketClientPlugin {
                         match msg {
                             Ok(Message::Text(text)) => {
                                 log_info!("Received message from server: {}", text);
-                                plugin_ctx_clone.send_message_to_frontend(&format!("{}", text));
+                                plugin_ctx_clone.send_message_to_frontend(text.as_str());
                             }
                             Ok(Message::Close(_)) => {
                                 log_info!("Server closed connection");
@@ -376,12 +368,18 @@ pub extern "C" fn create_plugin() -> *mut PluginInterface {
 }
 
 /// 销毁插件实例的导出函数
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers.
+/// The caller must ensure that:
+/// - `interface` is a valid pointer to a `PluginInterface` that was created by `create_plugin`
+/// - `interface` has not been freed or destroyed previously
+/// - The `PluginInterface` and its associated plugin instance are in a valid state
 #[no_mangle]
-pub extern "C" fn destroy_plugin(interface: *mut PluginInterface) {
+pub unsafe extern "C" fn destroy_plugin(interface: *mut PluginInterface) {
     if !interface.is_null() {
-        unsafe {
-            ((*interface).destroy)((*interface).plugin_ptr);
-            let _ = Box::from_raw(interface);
-        }
+        ((*interface).destroy)((*interface).plugin_ptr);
+        let _ = Box::from_raw(interface);
     }
 }
