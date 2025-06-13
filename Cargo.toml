@@ -19,4 +19,4 @@ tungstenite = "0.24"
 futures-util = "0.3"
 
 # 引用插件接口库
-plugin-interfaces = { path = "../../../../plugin-interfaces" }
+plugin-interfaces = { git = "https://github.com/luodeb/plugin-interfaces.git" }
